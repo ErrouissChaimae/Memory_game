@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Memory Game</h1>
+        <div class="text-center mb-3">
+            <label for="level" class="form-label">Choose Level:</label>
+            <select id="level" class="form-select w-auto mx-auto mb-3">
+                <option value="1">Level 1 (4 pairs)</option>
+                <option value="2">Level 2 (8 pairs)</option>
+                <option value="3">Level 3 (12 pairs)</option>
+            </select>
+            <button id="start-game" class="btn btn-primary">Start Game</button>
+        </div>
+        <div class="scoreboard">
+            <div class="player">Player 1: <span id="player1-score">0</span></div>
+            <div class="current-turn" id="current-turn">Player 1's Turn</div>
+            <div class="player">Player 2: <span id="player2-score">0</span></div>
+        </div>
+        <div class="row row-cols-4 g-3 justify-content-center" id="game-board"></div>
+    </div>
+
+  <script>
+    const iconsBase = ["🍎", "🍌", "🍒", "🍇", "🍉", "🍓", "🍍", "🥝", "🥭", "🍑", "🍋", "🍏"];
+let cards = [];
+let flippedCards = [];
+let matchedPairs = 0;
+let player1Score = 0;
+let player2Score = 0;
+let currentPlayer = 1;
+let totalPairs = 0;
+
+const gameBoard = document.getElementById("game-board");
+const player1ScoreDisplay = document.getElementById("player1-score");
+const player2ScoreDisplay = document.getElementById("player2-score");
+const startButton = document.getElementById("start-game");
+const levelSelect = document.getElementById("level");
+const currentTurnDisplay = document.getElementById("current-turn");
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function createCard(icon) {
+    const col = document.createElement("div");
+    col.className = "col card";
+
+    const cardInner = document.createElement("div");
+    cardInner.className = "card-inner";
+
+    const cardFront = document.createElement("div");
+    cardFront.className = "card-front";
+    cardFront.textContent = icon;
+
+    const cardBack = document.createElement("div");
+    cardBack.className = "card-back";
+    cardBack.textContent = "?";
+
+    cardInner.appendChild(cardFront);
+    cardInner.appendChild(cardBack);
+    col.appendChild(cardInner);
+
+    col.addEventListener("click", () => handleCardClick(col, icon));
+
+    return col;
+}
+
+function handleCardClick(card, icon) {
+    if (card.classList.contains("flipped") || flippedCards.length === 2) {
+        return;
+    }
+
+    card.classList.add("flipped");
+    flippedCards.push({ card, icon });
+
+    if (flippedCards.length === 2) {
+        const [first, second] = flippedCards;
+        if (first.icon === second.icon) {
+            matchedPairs++;
+            updateScore();
+            flippedCards = [];
+            if (matchedPairs === totalPairs) {
+                setTimeout(() => alert(`Player ${player1Score > player2Score ? 1 : 2} wins!`), 500);
+            }
+        } else {
+            setTimeout(() => {
+                first.card.classList.remove("flipped");
+                second.card.classList.remove("flipped");
+                flippedCards = [];
+            }, 1000);
+            switchPlayer();
+        }
+    }
+}
+
+function updateScore() {
+    if (currentPlayer === 1) {
+        player1Score++;
+        player1ScoreDisplay.textContent = player1Score;
+    } else {
+        player2Score++;
+        player2ScoreDisplay.textContent = player2Score;
+    }
+}
+
+function switchPlayer() {
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+    currentTurnDisplay.textContent = `Player ${currentPlayer}'s Turn`;
+}
+
+function initializeGame() {
+    gameBoard.innerHTML = "";
+    player1Score = 0;
+    player2Score = 0;
+    matchedPairs = 0;
+    flippedCards = [];
+    currentPlayer = 1;
+
+    currentTurnDisplay.textContent = "Player 1's Turn";
+
+    const level = parseInt(levelSelect.value);
+    totalPairs = level * 4;
+    cards = shuffle([...iconsBase.slice(0, totalPairs), ...iconsBase.slice(0, totalPairs)]);
+
+    cards.forEach(icon => {
+        gameBoard.appendChild(createCard(icon));
+    });
+
+    player1ScoreDisplay.textContent = player1Score;
+    player2ScoreDisplay.textContent = player2Score;
+}
+
+startButton.addEventListener("click", initializeGame);
+
+  </script>
+</body>
+</html>
